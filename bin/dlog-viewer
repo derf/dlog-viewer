@@ -3,10 +3,6 @@
 
 """dlog-viewer - View and Convert Keysight .dlog Files
 
-USAGE
-
-dlog-viewer [--csv-export <file.csv>] [--plot] [--stat] <file.dlog>
-
 DESCRIPTION
 
 dlog-viewer loads voltage, current, and/or power measurements from .dlog files
@@ -17,19 +13,10 @@ This program is not affiliated with Keysight and has not been thoroughly
 tested yet. Use at your own risk.
 
 OPTIONS
-
-  --csv-export <file.csv>
-    Export measurements as CSV to <file.csv>
-  --plot
-    Draw plots of voltage/current/power over time
-  --stat
-    Print mean voltage, current, and power
-
 """
 
 import argparse
 import csv
-import lzma
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -75,6 +62,7 @@ class DLog:
 
         with open(filename, "rb") as f:
             if ".xz" in filename:
+                import lzma
                 f = lzma.open(f)
 
             while line != "</dlog>\n":
@@ -157,6 +145,19 @@ class DLog:
 
 
 def print_stats(dlog):
+    if dlog.duration_deviates:
+        print(
+            "Measurement duration: {:f} of {:d} seconds at {:f} µs per sample".format(
+                dlog.observed_duration, dlog.planned_duration, dlog.interval * 1000000
+            )
+        )
+    else:
+        print(
+            "Measurement duration: {:d} seconds at {:f} µs per sample".format(
+                dlog.planned_duration, dlog.interval * 1000000
+            )
+        )
+
     for channel in dlog.channels:
         min_data = np.min(channel.data)
         max_data = np.max(channel.data)
@@ -245,7 +246,7 @@ def export_csv(dlog, filename):
     with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
         channel_header = list(
-            map(lambda x: f"Slot {x.slot} {x.unit} ({x.smu})", dlog.channels)
+            map(lambda x: f"{x.smu} in slot {x.slot} [{x.unit}]", dlog.channels)
         )
         writer.writerow(["Timestamp [s]"] + channel_header)
         for row in range(rows):
@@ -273,22 +274,7 @@ def main():
 
     args = parser.parse_args()
 
-    print(args)
-
     dlog = DLog(args.dlog_file)
-
-    if dlog.duration_deviates:
-        print(
-            "Measurement duration: {:f} of {:d} seconds at {:f} µs per sample".format(
-                dlog.observed_duration, dlog.planned_duration, dlog.interval * 1000000
-            )
-        )
-    else:
-        print(
-            "Measurement duration: {:d} seconds at {:f} µs per sample".format(
-                dlog.planned_duration, dlog.interval * 1000000
-            )
-        )
 
     if args.stat:
         print_stats(dlog)

@@ -63,6 +63,7 @@ class DLog:
         with open(filename, "rb") as f:
             if ".xz" in filename:
                 import lzma
+
                 f = lzma.open(f)
 
             while line != "</dlog>\n":
@@ -98,11 +99,6 @@ class DLog:
             0, self.observed_duration, num=int(len(raw_data) / (4 * num_channels))
         )
 
-        if int(self.observed_duration) != self.planned_duration:
-            self.duration_deviates = True
-        else:
-            self.duration_deviates = False
-
         self.data = np.ndarray(
             shape=(num_channels, int(len(raw_data) / (4 * num_channels))),
             dtype=np.float32,
@@ -137,6 +133,9 @@ class DLog:
             return True
         return False
 
+    def observed_duration_equals_expectation(self):
+        return int(self.observed_duration) == self.planned_duration
+
     def all_data_slots_have_power(self):
         for slot in range(4):
             if self.slot_has_data(slot) and not self.slot_has_power(slot):
@@ -145,16 +144,16 @@ class DLog:
 
 
 def print_stats(dlog):
-    if dlog.duration_deviates:
+    if dlog.observed_duration_equals_expectation():
         print(
-            "Measurement duration: {:f} of {:d} seconds at {:f} µs per sample".format(
-                dlog.observed_duration, dlog.planned_duration, dlog.interval * 1000000
+            "Measurement duration: {:d} seconds at {:f} µs per sample".format(
+                dlog.planned_duration, dlog.interval * 1000000
             )
         )
     else:
         print(
-            "Measurement duration: {:d} seconds at {:f} µs per sample".format(
-                dlog.planned_duration, dlog.interval * 1000000
+            "Measurement duration: {:f} of {:d} seconds at {:f} µs per sample".format(
+                dlog.observed_duration, dlog.planned_duration, dlog.interval * 1000000
             )
         )
 

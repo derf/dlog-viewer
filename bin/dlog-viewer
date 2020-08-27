@@ -283,7 +283,7 @@ def main():
         export_csv(dlog, args.csv_export)
 
     if args.plot:
-        if dlog.all_data_slots_have_power() and False:
+        if dlog.all_data_slots_have_power():
             show_power_plot(dlog)
         else:
             show_raw_plot(dlog)

@@ -108,7 +108,13 @@ class DLog:
         channel_offset = 0
         measurement_offset = 0
         for value in iterator:
-            self.data[channel_offset, measurement_offset] = value[0]
+            if value[0] < -1e6 or value[0] > 1e6:
+                print(
+                    f"Invalid data value {value[0]} at channel {channel_offset}, measurement {measurement_offset}. Replacing with 0."
+                )
+                self.data[channel_offset, measurement_offset] = 0
+            else:
+                self.data[channel_offset, measurement_offset] = value[0]
             if channel_offset + 1 == num_channels:
                 channel_offset = 0
                 measurement_offset += 1

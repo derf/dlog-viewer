@@ -183,14 +183,14 @@ def show_power_plot(dlog):
     handles = list()
 
     for slot in dlog.slots:
-        if "W" in slot:
+        if "A" in slot:
             (handle,) = plt.plot(
-                dlog.timestamps, slot["W"].data, "b-", label="P", markersize=1
+                dlog.timestamps, slot["A"].data, "b-", label="P", markersize=1
             )
             handles.append(handle)
             (handle,) = plt.plot(
                 dlog.timestamps,
-                running_mean(slot["W"].data, 10),
+                running_mean(slot["A"].data, 10),
                 "r-",
                 label="mean(P, 10)",
                 markersize=1,
@@ -217,6 +217,51 @@ def show_power_plot(dlog):
     plt.legend(handles=handles)
     plt.xlabel("Time [s]")
     plt.ylabel("Power [W]")
+    plt.grid(True)
+    plt.show()
+
+
+def show_unit_plot(dlog, metric):
+
+    handles = list()
+
+    if metric == "U":
+        unit = "V"
+    elif metric == "I":
+        unit = "A"
+    elif metric == "P":
+        unit = "W"
+
+    for slot in dlog.slots:
+        if unit in slot:
+            channel = slot[unit]
+            (handle,) = plt.plot(
+                dlog.timestamps,
+                slot[unit].data,
+                "b-",
+                label=f"slot {channel.slot} ({channel.smu})",
+                markersize=1,
+            )
+            handles.append(handle)
+            (handle,) = plt.plot(
+                dlog.timestamps,
+                running_mean(slot[unit].data, 10),
+                "r-",
+                label=f"slot {channel.slot} mean",
+                markersize=1,
+            )
+            handles.append(handle)
+
+    plt.legend(handles=handles)
+    plt.xlabel("Time [s]")
+    if unit == "V":
+        plt.ylabel("Voltage [V]")
+    elif unit == "A":
+        plt.ylabel("Current [A]")
+    elif unit == "W":
+        plt.ylabel("Power [W]")
+    else:
+        plt.ylabel(f"??? [{unit}]")
     plt.grid(True)
     plt.show()
 
@@ -267,8 +312,8 @@ def main():
     )
     parser.add_argument(
         "--plot",
-        help="Draw plots of voltage/current/power overtime",
-        action="store_true",
+        choices=["U", "I", "P", "all"],
+        help="Plot voltage/current/power over time",
     )
     parser.add_argument(
         "--stat", help="Print mean voltage, current, and power", action="store_true"
@@ -288,10 +333,12 @@ def main():
         export_csv(dlog, args.csv_export)
 
     if args.plot:
-        if dlog.all_data_slots_have_power():
+        if args.plot == "P" and dlog.all_data_slots_have_power():
             show_power_plot(dlog)
-        else:
+        elif args.plot == "all":
             show_raw_plot(dlog)
+        else:
+            show_unit_plot(dlog, args.plot)
 
 
 if __name__ == "__main__":

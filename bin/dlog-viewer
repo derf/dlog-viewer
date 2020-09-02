@@ -183,14 +183,14 @@ def show_power_plot(dlog):
     handles = list()
 
     for slot in dlog.slots:
-        if "A" in slot:
+        if "W" in slot:
             (handle,) = plt.plot(
-                dlog.timestamps, slot["A"].data, "b-", label="P", markersize=1
+                dlog.timestamps, slot["W"].data, "b-", label="P", markersize=1
             )
             handles.append(handle)
             (handle,) = plt.plot(
                 dlog.timestamps,
-                running_mean(slot["A"].data, 10),
+                running_mean(slot["W"].data, 10),
                 "r-",
                 label="mean(P, 10)",
                 markersize=1,

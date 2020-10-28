@@ -19,13 +19,12 @@ import argparse
 import csv
 import json
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 import numpy as np
 import os
 import struct
 import sys
 import xml.etree.ElementTree as ET
-
-from multiprocessing import Pool
 
 
 def running_mean(x: np.ndarray, N: int) -> np.ndarray:

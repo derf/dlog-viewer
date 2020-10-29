@@ -158,7 +158,8 @@ class DLogChannel:
 
 
 class DLog:
-    def __init__(self, filename, limit=None):
+    def __init__(self, filename, skip=None, limit=None):
+        self.skip_duration = skip
         self.limit_duration = limit
         self.load_dlog(filename)
 
@@ -204,6 +205,18 @@ class DLog:
         self.timestamps = np.linspace(
             0, self.observed_duration, num=int(len(raw_data) / (4 * num_channels))
         )
+
+        if (
+            self.skip_duration is not None
+            and self.observed_duration >= self.skip_duration
+        ):
+            start_offset = 0
+            for i, ts in enumerate(self.timestamps):
+                if ts >= self.skip_duration:
+                    start_offset = i
+                    break
+            self.timestamps = self.timestamps[start_offset:]
+            raw_data = raw_data[start_offset * 4 * num_channels :]
 
         if (
             self.limit_duration is not None
@@ -472,6 +485,13 @@ def main():
         help="Export analysis results (e.g. changepoints) to JSON file",
     )
     parser.add_argument(
+        "--skip",
+        metavar="N",
+        type=int,
+        default=0,
+        help="Skip the first N seconds of data. This is useful to avoid startup code influencing the results of a long-running measurement",
+    )
+    parser.add_argument(
         "--limit",
         type=float,
         metavar="N",
@@ -494,7 +514,7 @@ def main():
 
     args = parser.parse_args()
 
-    dlog = DLog(args.dlog_file, args.limit)
+    dlog = DLog(args.dlog_file, args.skip, args.limit)
 
     if args.stat:
         print_stats(dlog)

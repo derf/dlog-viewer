@@ -523,6 +523,12 @@ def main():
 
     if args.pelt:
         changepoints = detect_changepoints(dlog, num_samples=args.pelt)
+        for i, slot in enumerate(changepoints):
+            for unit in slot:
+                num_changepoints = len(slot[unit])
+                print(
+                    f"Found {num_changepoints} changepoints for {dlog.slots[i][unit].smu} {unit}"
+                )
 
     if args.json_export:
         extra_data = dict()

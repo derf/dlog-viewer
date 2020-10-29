@@ -286,7 +286,6 @@ def detect_changepoints(dlog, num_samples):
     for slot in dlog.slots:
         ret_slot = dict()
         for unit in slot:
-            print(f"changepoint detection for {slot} {unit}")
             pelt = PELT(running_mean(slot[unit].data, 10), num_samples=num_samples)
             changepoints = pelt.get_changepoints()
             prev = 0

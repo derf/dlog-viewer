@@ -332,11 +332,18 @@ def print_stats(dlog):
         print()
 
 
-def show_power_plot(dlog):
+def plot_changepoints_vlines(changepoints):
+    X = list()
+    for cp in changepoints:
+        X.append(cp["interval"][1])
+    return X
+
+
+def show_power_plot(dlog, changepoints=None):
 
     handles = list()
 
-    for slot in dlog.slots:
+    for i, slot in enumerate(dlog.slots):
         if "W" in slot:
             (handle,) = plt.plot(
                 dlog.timestamps, slot["W"].data, "b-", label="P", markersize=1
@@ -350,6 +357,14 @@ def show_power_plot(dlog):
                 markersize=1,
             )
             handles.append(handle)
+            if changepoints is not None:
+                plt.vlines(
+                    plot_changepoints_vlines(changepoints[i]["W"]),
+                    np.min(slot["W"].data),
+                    np.max(slot["W"].data),
+                    "g",
+                    label="changepoints(P)",
+                )
         elif "V" in slot and "A" in slot:
             (handle,) = plt.plot(
                 dlog.timestamps,
@@ -367,6 +382,14 @@ def show_power_plot(dlog):
                 markersize=1,
             )
             handles.append(handle)
+            if changepoints is not None:
+                plt.vlines(
+                    plot_changepoints_vlines(changepoints[i]["A"]),
+                    np.min(slot["V"].data * slot["A"].data),
+                    np.max(slot["V"].data * slot["A"].data),
+                    "g",
+                    label="changepoints(I)",
+                )
 
     plt.legend(handles=handles)
     plt.xlabel("Time [s]")
@@ -375,7 +398,7 @@ def show_power_plot(dlog):
     plt.show()
 
 
-def show_unit_plot(dlog, metric):
+def show_unit_plot(dlog, metric, changepoints):
 
     handles = list()
 
@@ -386,7 +409,7 @@ def show_unit_plot(dlog, metric):
     elif metric == "P":
         unit = "W"
 
-    for slot in dlog.slots:
+    for i, slot in enumerate(dlog.slots):
         if unit in slot:
             channel = slot[unit]
             (handle,) = plt.plot(
@@ -405,6 +428,14 @@ def show_unit_plot(dlog, metric):
                 markersize=1,
             )
             handles.append(handle)
+            if changepoints is not None:
+                plt.vlines(
+                    plot_changepoints_vlines(changepoints[i][unit]),
+                    np.min(slot[unit].data),
+                    np.max(slot[unit].data),
+                    "g",
+                    label=f"changepoints",
+                )
 
     plt.legend(handles=handles)
     plt.xlabel("Time [s]")
@@ -497,7 +528,10 @@ def main():
         help="Limit analysis to the first N seconds of data",
     )
     parser.add_argument(
-        "--pelt", metavar="JUMP", type=int, help="Perform changepoint detection"
+        "--pelt",
+        metavar="NUM",
+        type=int,
+        help="Perform changepoint detection on NUM samples",
     )
     parser.add_argument(
         "--plot",
@@ -538,11 +572,17 @@ def main():
 
     if args.plot:
         if args.plot == "P" and dlog.all_data_slots_have_power():
-            show_power_plot(dlog)
+            if args.pelt:
+                show_power_plot(dlog, changepoints)
+            else:
+                show_power_plot(dlog)
         elif args.plot == "all":
             show_raw_plot(dlog)
         else:
-            show_unit_plot(dlog, args.plot)
+            if args.pelt:
+                show_unit_plot(dlog, args.plot, changepoints)
+            else:
+                show_unit_plot(dlog, args.plot)
 
 
 if __name__ == "__main__":

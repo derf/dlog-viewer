@@ -398,7 +398,7 @@ def show_power_plot(dlog, changepoints=None):
     plt.show()
 
 
-def show_unit_plot(dlog, metric, changepoints):
+def show_unit_plot(dlog, metric, changepoints=None):
 
     handles = list()
 

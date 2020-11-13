@@ -161,6 +161,7 @@ class DLog:
     def __init__(self, filename, skip=None, limit=None):
         self.skip_duration = skip
         self.limit_duration = limit
+        self.filename = filename
         self.load_dlog(filename)
 
     def load_dlog(self, filename):
@@ -392,6 +393,7 @@ def show_power_plot(dlog, changepoints=None):
                 )
 
     plt.legend(handles=handles)
+    plt.title(dlog.filename)
     plt.xlabel("Time [s]")
     plt.ylabel("Power [W]")
     plt.grid(True)
@@ -438,6 +440,7 @@ def show_unit_plot(dlog, metric, changepoints=None):
                 )
 
     plt.legend(handles=handles)
+    plt.title(dlog.filename)
     plt.xlabel("Time [s]")
     if unit == "V":
         plt.ylabel("Voltage [V]")
@@ -470,6 +473,7 @@ def show_raw_plot(dlog):
         handles.append(handle)
 
     plt.legend(handles=handles)
+    plt.title(dlog.filename)
     plt.xlabel("Time [s]")
     plt.ylabel("Voltage [V] / Current [A] / Power [W]")
     plt.grid(True)

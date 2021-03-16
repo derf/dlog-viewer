@@ -200,8 +200,14 @@ class DLog:
 
         self.channels = list(map(DLogChannel, channels))
         self.interval = float(dlog.find("frame").find("tint").text)
+        self.sense_minmax = int(dlog.find("frame").find("sense_minmax").text)
         self.planned_duration = int(dlog.find("frame").find("time").text)
         self.observed_duration = self.interval * int(len(raw_data) / (4 * num_channels))
+
+        if self.sense_minmax:
+            raise RuntimeError(
+                "DLog files with 'Log Min/Max' enabled are not supported yet"
+            )
 
         self.timestamps = np.linspace(
             0, self.observed_duration, num=int(len(raw_data) / (4 * num_channels))
@@ -322,6 +328,7 @@ def print_stats(dlog):
         min_data = np.min(channel.data)
         max_data = np.max(channel.data)
         mean_data = np.mean(channel.data)
+        std_data = np.std(channel.data)
         if channel.unit == "V":
             precision = 3
         else:
@@ -329,6 +336,7 @@ def print_stats(dlog):
         print(f"Slot {channel.slot} ({channel.smu}):")
         print(f"    Min  {min_data:.{precision}f} {channel.unit}")
         print(f"    Mean {mean_data:.{precision}f} {channel.unit}")
+        print(f"    σ    {std_data:.{precision}f} {channel.unit}")
         print(f"    Max  {max_data:.{precision}f} {channel.unit}")
         print()
 
@@ -521,7 +529,7 @@ def main():
     parser.add_argument(
         "--skip",
         metavar="N",
-        type=int,
+        type=float,
         default=0,
         help="Skip the first N seconds of data. This is useful to avoid startup code influencing the results of a long-running measurement",
     )

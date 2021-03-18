@@ -201,13 +201,13 @@ class DLog:
         self.channels = list(map(DLogChannel, channels))
         self.interval = float(dlog.find("frame").find("tint").text)
         self.sense_minmax = int(dlog.find("frame").find("sense_minmax").text)
-        self.planned_duration = int(dlog.find("frame").find("time").text)
-        self.observed_duration = self.interval * int(len(raw_data) / (4 * num_channels))
 
         if self.sense_minmax:
-            raise RuntimeError(
-                "DLog files with 'Log Min/Max' enabled are not supported yet"
-            )
+            # there's a min, current, and max reading for each channel.
+            num_channels *= 3
+
+        self.planned_duration = int(dlog.find("frame").find("time").text)
+        self.observed_duration = self.interval * int(len(raw_data) / (4 * num_channels))
 
         self.timestamps = np.linspace(
             0, self.observed_duration, num=int(len(raw_data) / (4 * num_channels))
@@ -264,7 +264,11 @@ class DLog:
         self.slots = [dict(), dict(), dict(), dict()]
 
         for i, channel in enumerate(self.channels):
-            channel.data = self.data[i]
+            if self.sense_minmax:
+                # [i*3] == current/avg(?), [i*3 + 1] == min, [i*3 + 2] == max
+                channel.data = self.data[i * 3]
+            else:
+                channel.data = self.data[i]
             self.slots[channel.slot - 1][channel.unit] = channel
 
     def slot_has_data(self, slot):

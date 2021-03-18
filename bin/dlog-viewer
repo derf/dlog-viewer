@@ -583,11 +583,17 @@ def main():
         export_json(dlog, args.json_export, extra_data)
 
     if args.plot:
-        if args.plot == "P" and dlog.all_data_slots_have_power():
-            if args.pelt:
-                show_power_plot(dlog, changepoints)
+        if args.plot == "P":
+            if dlog.all_data_slots_have_power():
+                if args.pelt:
+                    show_power_plot(dlog, changepoints)
+                else:
+                    show_power_plot(dlog)
             else:
-                show_power_plot(dlog)
+                print(
+                    "Error: power plot requested, but neither power nor voltage*current readings present.",
+                    file=sys.stderr,
+                )
         elif args.plot == "all":
             show_raw_plot(dlog)
         else:

@@ -405,7 +405,7 @@ def show_efficiency_plot(dlog, plot_x, changepoints=None):
         xaxis = dlog.slots[out_slot]["A"].data * -1
         xlabel = "Output Current [A]"
     elif plot_x == "P":
-        xaxis = out_trace * -1
+        xaxis = out_trace
         xlabel = "Output Power [W]"
 
     (handle,) = plt.plot(

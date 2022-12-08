@@ -282,6 +282,12 @@ class DLog:
             return True
         return False
 
+    def count_data_slots(self):
+        return sum(map(int, map(self.slot_has_data, range(4))))
+
+    def count_power_slots(self):
+        return sum(map(int, map(self.slot_has_power, range(4))))
+
     def observed_duration_equals_expectation(self):
         return int(self.observed_duration) == self.planned_duration
 
@@ -352,7 +358,86 @@ def plot_changepoints_vlines(changepoints):
     return X
 
 
-def show_power_plot(dlog, changepoints=None):
+def show_efficiency_plot(dlog, plot_x, changepoints=None):
+
+    handles = list()
+    traces = list()
+    slots = list()
+
+    for i, slot in enumerate(dlog.slots):
+        if "W" in slot:
+            slots.append(i)
+            traces.append(slot["W"].data)
+        elif "V" in slot and "A" in slot:
+            slots.append(i)
+            traces.append(slot["V"].data * slot["A"].data)
+
+    assert len(traces) == 2
+
+    if min(traces[0]) < min(traces[1]):
+        in_trace = traces[1]
+        out_trace = traces[0] * -1
+        in_slot = slots[1]
+        out_slot = slots[0]
+    else:
+        in_trace = traces[0]
+        out_trace = traces[1] * -1
+        in_slot = slots[0]
+        out_slot = slots[1]
+
+    eta = out_trace * 100 / in_trace
+
+    eta[eta > 100] = np.nan
+    eta[eta < 0] = np.nan
+
+    marker = "."
+    linestyle = ""
+
+    if plot_x == "T":
+        xaxis = dlog.timestamps
+        xlabel = "Time [s]"
+        marker = ""
+        linestyle = "-"
+    elif plot_x == "U":
+        xaxis = dlog.slots[in_slot]["V"].data
+        xlabel = "Input Voltage [V]"
+    elif plot_x == "I":
+        xaxis = dlog.slots[out_slot]["A"].data * -1
+        xlabel = "Output Current [A]"
+    elif plot_x == "P":
+        xaxis = out_trace * -1
+        xlabel = "Output Power [W]"
+
+    (handle,) = plt.plot(
+        xaxis,
+        eta,
+        marker=marker,
+        color="b",
+        linestyle=linestyle,
+        label="η",
+        markersize=1,
+    )
+    handles.append(handle)
+    (handle,) = plt.plot(
+        xaxis,
+        running_mean(eta, 10),
+        marker=marker,
+        color="r",
+        linestyle=linestyle,
+        label="mean(η, 10)",
+        markersize=1,
+    )
+    handles.append(handle)
+
+    plt.legend(handles=handles)
+    plt.title(dlog.filename)
+    plt.xlabel(xlabel)
+    plt.ylabel("Conversion Efficiency [%]")
+    plt.grid(True)
+    plt.show()
+
+
+def show_power_plot(dlog, plot_x, changepoints=None):
 
     handles = list()
 
@@ -412,7 +497,7 @@ def show_power_plot(dlog, changepoints=None):
     plt.show()
 
 
-def show_unit_plot(dlog, metric, changepoints=None):
+def show_unit_plot(dlog, metric, plot_x, changepoints=None):
 
     handles = list()
 
@@ -466,7 +551,7 @@ def show_unit_plot(dlog, metric, changepoints=None):
     plt.show()
 
 
-def show_raw_plot(dlog):
+def show_raw_plot(dlog, plot_x):
     handles = list()
 
     for channel in dlog.channels:
@@ -550,9 +635,16 @@ def main():
         help="Perform changepoint detection on NUM samples",
     )
     parser.add_argument(
+        "--plot-x",
+        choices=["T", "U", "I", "P"],
+        default="T",
+        help="Plot time/voltage/current/power at X axis",
+    )
+    parser.add_argument(
+        "--plot-y",
         "--plot",
-        choices=["U", "I", "P", "all"],
-        help="Plot voltage/current/power over time",
+        choices=["U", "I", "P", "eta", "all"],
+        help="Plot voltage/current/power/efficiency at Y axis",
     )
     parser.add_argument(
         "--stat", help="Print mean voltage, current, and power", action="store_true"
@@ -586,25 +678,37 @@ def main():
             extra_data["changepoints"] = changepoints
         export_json(dlog, args.json_export, extra_data)
 
-    if args.plot:
-        if args.plot == "P":
+    if args.plot_y:
+        if args.plot_y == "P":
             if dlog.all_data_slots_have_power():
                 if args.pelt:
-                    show_power_plot(dlog, changepoints)
+                    show_power_plot(dlog, args.plot_x, changepoints)
                 else:
-                    show_power_plot(dlog)
+                    show_power_plot(dlog, args.plot_x)
             else:
                 print(
                     "Error: power plot requested, but neither power nor voltage*current readings present.",
                     file=sys.stderr,
                 )
-        elif args.plot == "all":
-            show_raw_plot(dlog)
+        elif args.plot_y == "eta":
+            if dlog.count_power_slots() == 2:
+                if args.pelt:
+                    show_efficiency_plot(dlog, args.plot_x, changepoints)
+                else:
+                    show_efficiency_plot(dlog, args.plot_x)
+            else:
+                print(
+                    "Error: efficiency plot requires 2 power measurements. This file has "
+                    + dlog.count_power_slots(),
+                    file=sys.stderr,
+                )
+        elif args.plot_y == "all":
+            show_raw_plot(dlog, args.plot_x)
         else:
             if args.pelt:
-                show_unit_plot(dlog, args.plot, changepoints)
+                show_unit_plot(dlog, args.plot_y, args.plot_x, changepoints)
             else:
-                show_unit_plot(dlog, args.plot)
+                show_unit_plot(dlog, args.plot_y, args.plot_x)
 
 
 if __name__ == "__main__":

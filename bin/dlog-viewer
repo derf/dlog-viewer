@@ -272,10 +272,10 @@ class DLog:
             self.slots[channel.slot - 1][channel.unit] = channel
 
     def slot_has_data(self, slot):
-        return len(self.slots[slot - 1]) > 0
+        return len(self.slots[slot]) > 0
 
     def slot_has_power(self, slot):
-        slot_data = self.slots[slot - 1]
+        slot_data = self.slots[slot]
         if "W" in slot_data:
             return True
         if "V" in slot_data and "A" in slot_data:

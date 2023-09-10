@@ -1,9 +1,11 @@
 # dlog-viewer – Viewer and Exporter for Keysight dlog Files
 
-dlog-viewer loads voltage, current, and/or power measurements from .dlog files
+[**dlog-viewer**](https://finalrewind.org/projects/dlog-viewer/) loads voltage, current, and/or power measurements from .dlog files
 produced by devices such as the Keysight N6705B DC Power Analyzer.  It is
 specifically meant for .dlog files that were written to a USB stick by the
 power analyzer itself, so no Keysight software is required for analyzing them.
+
+![](https://finalrewind.org/projects/dlog-viewer/media/preview.png)
 
 Measurements can be exported to CSV or plotted on-screen via matplotlib.  There
 is also support for changepoint detection to automatically identify changes in

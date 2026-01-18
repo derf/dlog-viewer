@@ -32,3 +32,12 @@ See `bin/dlog-viewer --help` for details.
 
 * Python 3, numpy, matplotlib, xml.etree
 * Changepoint detection: python3-ruptures
+
+## References
+
+Mirrors of the dlog-viewer repository are available at:
+
+* [Chaosdorf](https://chaosdorf.de/git/derf/dlog-viewer)
+* [Codeberg](https://chaosdorf.de/git/derf/dlog-viewer)
+* [Finalrewind](https://git.finalrewind.org/derf/dlog-viewer)
+* [GitHub](https://github.com/derf/dlog-viewer)

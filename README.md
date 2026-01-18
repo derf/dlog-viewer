@@ -39,5 +39,6 @@ Mirrors of the dlog-viewer repository are available at:
 
 * [Chaosdorf](https://chaosdorf.de/git/derf/dlog-viewer)
 * [Codeberg](https://chaosdorf.de/git/derf/dlog-viewer)
+* [ESS](https://ess.cs.uos.de/git/bf/dlog-viewer)
 * [Finalrewind](https://git.finalrewind.org/derf/dlog-viewer)
 * [GitHub](https://github.com/derf/dlog-viewer)
